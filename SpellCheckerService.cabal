@@ -1,0 +1,100 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.34.4.
+--
+-- see: https://github.com/sol/hpack
+
+name:           SpellCheckerService
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/OmegaGreeNya/SpellCheckerService#readme>
+homepage:       https://github.com/OmegaGreeNya/SpellCheckerService#readme
+bug-reports:    https://github.com/OmegaGreeNya/SpellCheckerService/issues
+author:         GreenCake (Nikolai)
+maintainer:     megamancake@yandex.ru
+copyright:      2022 GreenCake (Nikolai)
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    CHANGELOG.md
+
+source-repository head
+  type: git
+  location: https://github.com/OmegaGreeNya/SpellCheckerService
+
+library
+  exposed-modules:
+      Lib
+      SpellChecker
+      SpellChecker.Handle
+      SpellChecker.YandexSpellChecker
+  other-modules:
+      Paths_SpellCheckerService
+  hs-source-dirs:
+      src
+  default-extensions:
+      RecordWildCards
+      OverloadedStrings
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  build-depends:
+      aeson
+    , base >=4.7 && <5
+    , bytestring
+    , http-client
+    , http-conduit
+    , lens
+    , lens-aeson
+    , servant-server
+    , text
+    , warp
+  default-language: Haskell2010
+
+executable SpellCheckerService-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_SpellCheckerService
+  hs-source-dirs:
+      app
+  default-extensions:
+      RecordWildCards
+      OverloadedStrings
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      SpellCheckerService
+    , aeson
+    , base >=4.7 && <5
+    , bytestring
+    , http-client
+    , http-conduit
+    , lens
+    , lens-aeson
+    , servant-server
+    , text
+    , warp
+  default-language: Haskell2010
+
+test-suite SpellCheckerService-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_SpellCheckerService
+  hs-source-dirs:
+      test
+  default-extensions:
+      RecordWildCards
+      OverloadedStrings
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      SpellCheckerService
+    , aeson
+    , base >=4.7 && <5
+    , bytestring
+    , http-client
+    , http-conduit
+    , lens
+    , lens-aeson
+    , servant-server
+    , text
+    , warp
+  default-language: Haskell2010
