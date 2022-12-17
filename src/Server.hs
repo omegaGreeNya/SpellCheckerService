@@ -43,7 +43,10 @@ spellCheckResultToDTO SpellCheckResult{..} =
       checkMark
       (map errorWord checkErrors)
 
-type API = "check" :> ReqBody '[JSON] TextToCheck :> Post '[JSON] SpellCheckResultDTO
+type API = 
+   "api" 
+      :> "CheckText" 
+         :> ReqBody '[JSON] TextToCheck :> Post '[JSON] SpellCheckResultDTO
 
 runServer :: Handle -> IO ()
 runServer h@Handle{..} = run hServerPort (app h)
