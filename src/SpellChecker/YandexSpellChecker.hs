@@ -1,13 +1,15 @@
 {-# LANGUAGE DeriveGeneric #-}
 module SpellChecker.YandexSpellChecker
     ( createHandle
+    , splitTextByLimit
     ) where
--- TO DO: Splitting text on 10k symbol may result in splitted word!
+-- TO DO
 -- Handle request errors.
 
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.Aeson
 import Data.ByteString.Lazy (ByteString)
+import Data.Char (isSpace)
 import Data.Text (Text)
 import GHC.Generics
 import Network.HTTP.Client (RequestBody(..))
@@ -89,7 +91,20 @@ parseResponse rawJson =
 constructSpellCheckRequest :: Text -> (Request, Text)
 constructSpellCheckRequest text =
    (constructSpellCheckRequestUnsafe text', rest)
-   where (text', rest) = T.splitAt yandexMaxTextLength text
+   where (text', rest) = splitTextByLimit yandexMaxTextLength text
+
+-- | Splits text between words.
+-- First element of returned tulpe has length less than given limit.
+-- First element ends with trailing spaces, or with unsplitted word.
+-- No word from original text splitted between parts.
+-- Concatinatination of first and second returned element will result
+-- in original text.
+splitTextByLimit :: Int -> Text -> (Text, Text)
+splitTextByLimit charLimit textToSplit = let
+   (preText, afterText) = T.splitAt charLimit textToSplit
+   preText' = T.dropWhileEnd (not . isSpace) preText
+   splittedWord = T.takeWhileEnd (not . isSpace) preText
+   in (preText', splittedWord <> afterText)
 
 -- | Unsafe, doesn't handles max size of text in single request.
 constructSpellCheckRequestUnsafe :: Text -> Request
@@ -101,5 +116,4 @@ constructSpellCheckRequestUnsafe text =
    $ setRequestHeaders [("Content-Type", "application/x-www-form-urlencoded")]
    $ setRequestBody (RequestBodyBS $ "text=" <> (T.encodeUtf8 text))
    $ defaultRequest
-
 -- >>
