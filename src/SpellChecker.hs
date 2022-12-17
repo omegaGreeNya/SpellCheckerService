@@ -2,24 +2,19 @@
 
 module SpellChecker
     ( Handle
-    , TextError (..)
-    , SpellCheckResult
+    , TextError(..)
+    , SpellCheckResult(..)
     , checkText
     ) where
 
-import Data.Aeson
 import Data.Text (Text)
-import GHC.Generics
 
 import SpellChecker.Handle (Handle(..), TextError(..))
 
 data SpellCheckResult = SpellCheckResult
    { checkMark :: Int
    , checkErrors :: [TextError]
-   } deriving (Show, Generic)
-
-instance ToJSON SpellCheckResult
-instance FromJSON SpellCheckResult
+   } deriving (Show)
 
 checkText :: Monad m => Handle m -> Text -> m SpellCheckResult
 checkText Handle{..} text = do

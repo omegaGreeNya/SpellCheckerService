@@ -9,12 +9,12 @@ module Server
 
 import Control.Monad.IO.Class (liftIO)
 import Data.Aeson
-import Data.Text
+import Data.Text (Text)
 import GHC.Generics
 import Network.Wai.Handler.Warp
 import Servant
 
-import SpellChecker (checkText, SpellCheckResult)
+import SpellChecker (checkText, SpellCheckResult(..), TextError(..))
 
 import qualified SpellChecker (Handle)
 
@@ -24,13 +24,26 @@ data Handle = Handle
    }
 
 data TextToCheck = TextToCheck
-   { _text :: Text
+   { text :: Text
    } deriving Generic
 
 instance ToJSON TextToCheck
 instance FromJSON TextToCheck
 
-type API = "check" :> ReqBody '[JSON] TextToCheck :> Post '[JSON] SpellCheckResult
+data SpellCheckResultDTO = SpellCheckResultDTO
+   { mark :: Int
+   , errors :: [Text]
+   } deriving (Show, Generic)
+
+instance ToJSON SpellCheckResultDTO
+
+spellCheckResultToDTO :: SpellCheckResult -> SpellCheckResultDTO
+spellCheckResultToDTO SpellCheckResult{..} = 
+   SpellCheckResultDTO
+      checkMark
+      (map errorWord checkErrors)
+
+type API = "check" :> ReqBody '[JSON] TextToCheck :> Post '[JSON] SpellCheckResultDTO
 
 runServer :: Handle -> IO ()
 runServer h@Handle{..} = run hServerPort (app h)
@@ -41,9 +54,10 @@ spellCheckAPI = Proxy
 server :: Handle -> Server API
 server Handle{..} = checkText'
    where
-      checkText' :: TextToCheck -> Handler SpellCheckResult
-      checkText' TextToCheck{..} = 
-         liftIO $ checkText hSpellChecker _text
+      checkText' :: TextToCheck -> Handler SpellCheckResultDTO
+      checkText' TextToCheck{..} = do
+         result <- liftIO $ checkText hSpellChecker text
+         return $ spellCheckResultToDTO result
 
 app :: Handle -> Application
 app h = serve spellCheckAPI (server h)
