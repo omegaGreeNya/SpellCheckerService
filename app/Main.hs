@@ -2,30 +2,22 @@
 
 module Main (main) where
 
-import GHC.Generics
-import Data.Aeson
-import Data.Text
-import Network.Wai.Handler.Warp
-import Servant
+import System.Environment (getArgs)
+
+import Server (runServer)
+
+import qualified Server as S (Handle(..))
+import qualified SpellChecker.YandexSpellChecker as Y (createHandle)
 
 main :: IO ()
-main = run 8081 app
+main = do
+   args <- getArgs
+   case args of
+      []
+         -> runWithPort 8081
+      (port:_)
+         -> runWithPort (read port)
 
-type API = ReqBody '[JSON] TextToCheck :> Get '[JSON] TextToCheck
-
-appAPI :: Proxy API
-appAPI = Proxy
-
-server :: Server API
-server = return
-
-app :: Application
-app = serve appAPI server
-
-
--------------------
-
-data TextToCheck = TextToCheck { _text :: Text } deriving Generic
-
-instance FromJSON TextToCheck
-instance ToJSON TextToCheck
+runWithPort :: Int -> IO ()
+runWithPort port =
+   runServer $ S.Handle (Y.createHandle) port
