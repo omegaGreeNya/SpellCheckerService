@@ -1,6 +1,6 @@
--- Powershell
--- curl -Method Post -ContentType "application/json" -InFile ./data.json -Uri "http://localhost:8081/check"
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE TypeOperators #-}
 
 module Server 
    ( Handle(..)
@@ -18,11 +18,13 @@ import SpellChecker (checkText, SpellCheckResult(..), TextError(..))
 
 import qualified SpellChecker (Handle)
 
+-- | Server Handle
 data Handle = Handle
    { hSpellChecker :: SpellChecker.Handle IO
    , hServerPort   :: Int
    }
 
+-- | Data model to capture incoming text to check.
 data TextToCheck = TextToCheck
    { text :: Text
    } deriving Generic
@@ -30,6 +32,7 @@ data TextToCheck = TextToCheck
 instance ToJSON TextToCheck
 instance FromJSON TextToCheck
 
+-- | Wrapper around 'SpellCheckResult'. Sended back as check result.
 data SpellCheckResultDTO = SpellCheckResultDTO
    { mark :: Int
    , errors :: [Text]
@@ -43,16 +46,21 @@ spellCheckResultToDTO SpellCheckResult{..} =
       checkMark
       (map errorWord checkErrors)
 
+-- >>
+
 type API = 
    "api" 
       :> "CheckText" 
          :> ReqBody '[JSON] TextToCheck :> Post '[JSON] SpellCheckResultDTO
 
+spellCheckAPI :: Proxy API
+spellCheckAPI = Proxy
+
 runServer :: Handle -> IO ()
 runServer h@Handle{..} = run hServerPort (app h)
 
-spellCheckAPI :: Proxy API
-spellCheckAPI = Proxy
+app :: Handle -> Application
+app h = serve spellCheckAPI (server h)
 
 server :: Handle -> Server API
 server Handle{..} = checkText'
@@ -61,6 +69,3 @@ server Handle{..} = checkText'
       checkText' TextToCheck{..} = do
          result <- liftIO $ checkText hSpellChecker text
          return $ spellCheckResultToDTO result
-
-app :: Handle -> Application
-app h = serve spellCheckAPI (server h)

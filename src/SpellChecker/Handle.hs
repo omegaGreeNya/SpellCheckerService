@@ -10,6 +10,5 @@ data Handle m = Handle
    }
 
 data TextError = TextError 
-   { errorCode :: Int
-   , errorWord :: Text
+   { errorWord :: Text
    } deriving (Show)

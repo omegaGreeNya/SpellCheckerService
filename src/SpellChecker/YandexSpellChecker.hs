@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric #-}
 module SpellChecker.YandexSpellChecker
     ( createHandle
     ) where
@@ -31,7 +32,7 @@ instance ToJSON TextErrorDTO
 instance FromJSON TextErrorDTO
 
 textErrorFromDTO :: TextErrorDTO -> TextError
-textErrorFromDTO TextErrorDTO{..} = TextError code word
+textErrorFromDTO TextErrorDTO{..} = TextError word
 -- >>
 
 -- << API related constants
@@ -42,6 +43,7 @@ errorTooManyErrordCode :: Int
 errorTooManyErrordCode = 4
 -- >>
 
+-- << SpellChecker Handle construction
 createHandle :: MonadIO m => Handle m
 createHandle = Handle processText
 
@@ -51,6 +53,10 @@ processText text = do
    (result, rest) <- checkText text
    restResult <- processText rest
    return $ result <> restResult
+
+-- >>
+
+-- << Implementation
 
 -- | Creates a single API call, tries to send as much text as possible,
 -- returns call result and unprocessed text.
@@ -95,3 +101,5 @@ constructSpellCheckRequestUnsafe text =
    $ setRequestHeaders [("Content-Type", "application/x-www-form-urlencoded")]
    $ setRequestBody (RequestBodyBS $ "text=" <> (T.encodeUtf8 text))
    $ defaultRequest
+
+-- >>

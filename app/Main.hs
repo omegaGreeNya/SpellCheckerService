@@ -9,12 +9,15 @@ import Server (runServer)
 import qualified Server as S (Handle(..))
 import qualified SpellChecker.YandexSpellChecker as Y (createHandle)
 
+defaultPort :: Int
+defaultPort = 8081
+
 main :: IO ()
 main = do
    args <- getArgs
    case args of
       []
-         -> runWithPort 8081
+         -> runWithPort defaultPort
       (port:_)
          -> runWithPort (read port)
 
