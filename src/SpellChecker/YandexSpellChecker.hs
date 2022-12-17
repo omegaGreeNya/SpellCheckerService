@@ -1,20 +1,18 @@
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric       #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module SpellChecker.YandexSpellChecker
-    ( createHandle
-    , splitTextByLimit
+    (createHandle
     ) where
--- TO DO
--- Handle request errors.
 
+import Control.Exception (try)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.Aeson
 import Data.ByteString.Lazy (ByteString)
-import Data.Char (isSpace)
 import Data.Text (Text)
 import GHC.Generics
 import Network.HTTP.Client (RequestBody(..))
 import Network.HTTP.Simple
-   ( Request, httpLBS, getResponseBody, setRequestHeaders
+   ( Response, Request, HttpException, httpLBS, getResponseBody, setRequestHeaders
    , setRequestBody, setRequestMethod, setRequestPath
    , setRequestSecure, setRequestHost, defaultRequest)
 
@@ -49,12 +47,11 @@ errorTooManyErrorsCode = 4
 createHandle :: MonadIO m => Handle m
 createHandle = Handle processText
 
-processText :: MonadIO m => Text -> m [TextError]
-processText ""   = return mempty
+processText :: MonadIO m => Text -> m (Maybe [TextError])
+processText ""   = return $ Just mempty
 processText text = do
-   (result, rest) <- checkText text
-   restResult <- processText rest
-   return $ result <> restResult
+   results <- mapM checkText $ splitTextByLimit yandexMaxTextLength text
+   return . fmap concat $ sequence results
 
 -- >>
 
@@ -62,53 +59,65 @@ processText text = do
 
 -- | Creates a single API call, tries to send as much text as possible,
 -- returns call result and unprocessed text.
-checkText :: MonadIO m => Text -> m ([TextError], Text)
+checkText :: MonadIO m => Text -> m (Maybe [TextError])
 checkText text = do
-   let (request, rest) = constructSpellCheckRequest text
-   response <- liftIO $ httpLBS request
+   mResponse <- makeHttpRequestLBS $ constructSpellCheckRequest text
+   let
+      mResult = do
+         response <- mResponse
+         errorDTOs <- decode $ getResponseBody response
+         if null errorDTOs
+            then
+               return ([], "")
+            else do
+               let (checkedErrorDTOs, unprocessedText) = splitOnUnchecked errorDTOs text
+               return (map textErrorFromDTO checkedErrorDTOs, unprocessedText)
    
-   let resultDTO = parseResponse $ getResponseBody response
-   if resultDTO == []
-      then
-         return ([], rest)
-      else do
-         let (resultDTO', unprocessedText) = splitOnUnchecked resultDTO text
-         return (map textErrorFromDTO resultDTO', unprocessedText <> rest)
+   case mResult of
+      Nothing -> return Nothing
+      Just (errors, "") -> return $ Just errors
+      Just (errors, unprocessedText) -> do
+         mRestErrors <- checkText unprocessedText
+         return $ do
+            restErrors <- mRestErrors
+            return $ errors <> restErrors
    
-   where 
-      splitOnUnchecked errorDTO sendedText = 
-         let lastErr = last errorDTO
+   where
+      splitOnUnchecked errorDTOs sendedText = 
+         let lastErr = last errorDTOs
          in if code lastErr == errorTooManyErrorsCode
-            then (init errorDTO, T.drop (pos lastErr) sendedText)
-            else (errorDTO, "")
+            then (init errorDTOs, T.drop (pos lastErr) sendedText)
+            else (errorDTOs, "")
 
--- | Parses raw json bytesting.
-parseResponse :: ByteString -> [TextErrorDTO]
-parseResponse rawJson =
-   maybe [] id $ decode rawJson 
+-- | Tries to make http request, returns Nothing on network fail.
+makeHttpRequestLBS :: MonadIO m => Request -> m (Maybe (Response ByteString))
+makeHttpRequestLBS request = do
+   eResult <- liftIO . try $ httpLBS request
+   return $ case eResult of
+      Left (_ :: HttpException) -> Nothing
+      Right result -> Just result
 
--- | Creates request, returns request and unfitted part of text.
-constructSpellCheckRequest :: Text -> (Request, Text)
-constructSpellCheckRequest text =
-   (constructSpellCheckRequestUnsafe text', rest)
-   where (text', rest) = splitTextByLimit yandexMaxTextLength text
+-- | Splits text on parts of specified size. Without ommited symbols.
+-- Also, every word remains unsplitted.
+-- Due unsplit requerment, some parts may be more than specified size,
+-- but contain exactly one word (word with size bigger than limit).
+-- Warning: This is distructive function, in terms of that concatination of result
+-- may contain less spaces than original text between words.
+splitTextByLimit :: Int -> Text -> [Text]
+splitTextByLimit charLimit textToSplit =
+   process "" (T.words textToSplit)
+   where 
+      process "" [] = []
+      process "" (w:ws) = process w ws
+      process acc [] = [acc]
+      process acc (w:ws) =
+         if (T.length acc) + (T.length w) >= charLimit
+            then acc : (process "" ws)
+            else process (acc <> " " <> w) ws
 
--- | Splits text between words.
--- First element of returned tulpe has length less than given limit.
--- First element ends with trailing spaces, or with unsplitted word.
--- No word from original text splitted between parts.
--- Concatinatination of first and second returned element will result
--- in original text.
-splitTextByLimit :: Int -> Text -> (Text, Text)
-splitTextByLimit charLimit textToSplit = let
-   (preText, afterText) = T.splitAt charLimit textToSplit
-   preText' = T.dropWhileEnd (not . isSpace) preText
-   splittedWord = T.takeWhileEnd (not . isSpace) preText
-   in (preText', splittedWord <> afterText)
-
--- | Unsafe, doesn't handles max size of text in single request.
-constructSpellCheckRequestUnsafe :: Text -> Request
-constructSpellCheckRequestUnsafe text = 
+-- | Doesn't handles max size of text in single request.
+constructSpellCheckRequest :: Text -> Request
+constructSpellCheckRequest text = 
    setRequestMethod "POST"
    $ setRequestSecure False
    $ setRequestHost "speller.yandex.net"

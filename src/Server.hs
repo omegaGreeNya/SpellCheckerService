@@ -67,5 +67,8 @@ server Handle{..} = checkText'
    where
       checkText' :: TextToCheck -> Handler SpellCheckResultDTO
       checkText' TextToCheck{..} = do
-         result <- liftIO $ checkText hSpellChecker text
-         return $ spellCheckResultToDTO result
+         mResult <- liftIO $ checkText hSpellChecker text
+         maybe 
+            (throwError err500)
+            (return . spellCheckResultToDTO)
+            mResult

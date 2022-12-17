@@ -16,8 +16,10 @@ data SpellCheckResult = SpellCheckResult
    , checkErrors :: [TextError]
    } deriving (Show)
 
-checkText :: Monad m => Handle m -> Text -> m SpellCheckResult
+checkText :: Monad m => Handle m -> Text -> m (Maybe SpellCheckResult)
 checkText Handle{..} text = do
-   errorList <- hSpellCheck text
-   let mark = 5 - (min 5 (length errorList))
-   return $ SpellCheckResult mark errorList
+   mErrorList <- hSpellCheck text
+   return $ do
+      errorList <- mErrorList
+      let mark = 5 - (min 5 (length errorList))
+      return $ SpellCheckResult mark errorList

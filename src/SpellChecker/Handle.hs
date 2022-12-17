@@ -6,7 +6,7 @@ module SpellChecker.Handle
 import Data.Text
 
 data Handle m = Handle
-   { hSpellCheck :: Text -> m [TextError]
+   { hSpellCheck :: Text -> m (Maybe [TextError])
    }
 
 data TextError = TextError 
