@@ -39,8 +39,8 @@ textErrorFromDTO TextErrorDTO{..} = TextError word
 yandexMaxTextLength :: Int
 yandexMaxTextLength = 10000
 
-errorTooManyErrordCode :: Int
-errorTooManyErrordCode = 4
+errorTooManyErrorsCode :: Int
+errorTooManyErrorsCode = 4
 -- >>
 
 -- << SpellChecker Handle construction
@@ -76,7 +76,7 @@ checkText text = do
    where 
       splitOnUnchecked errorDTO sendedText = 
          let lastErr = last errorDTO
-         in if code lastErr == errorTooManyErrordCode
+         in if code lastErr == errorTooManyErrorsCode
             then (init errorDTO, T.drop (pos lastErr) sendedText)
             else (errorDTO, "")
 
