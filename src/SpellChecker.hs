@@ -7,7 +7,10 @@ module SpellChecker
     , checkText
     ) where
 
+import Control.Monad (when)
+import Colog ((<&))
 import Data.Text (Text)
+import Data.Maybe (isJust, isNothing)
 
 import SpellChecker.Handle (Handle(..), TextError(..))
 
@@ -19,7 +22,12 @@ data SpellCheckResult = SpellCheckResult
 checkText :: Monad m => Handle m -> Text -> m (Maybe SpellCheckResult)
 checkText Handle{..} text = do
    mErrorList <- hSpellCheck text
-   return $ do
-      errorList <- mErrorList
-      let mark = 5 - (min 5 (length errorList))
-      return $ SpellCheckResult mark errorList
+   let result = do
+         errorList <- mErrorList
+         let mark = 5 - (min 5 (length errorList))
+         return $ SpellCheckResult mark errorList
+   when (isJust result)
+      $ hLogger <& "Succesfully preformed spell check"
+   when(isNothing result)
+      $ hLogger <& "Errors occured during spell check. Given text wasn't checked"
+   return result

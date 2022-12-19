@@ -1,13 +1,17 @@
 {-# LANGUAGE DataKinds #-}
 
 module Main (main) where
+-- TO-DO
+-- Proper up-layer of the app, with config, handle creation conveer, etc..
 
+
+import Colog (logTextStdout)
 import System.Environment (getArgs)
 
 import Server (runServer)
 
 import qualified Server as S (Handle(..))
-import qualified SpellChecker.YandexSpellChecker as Y (createHandle)
+import qualified SpellChecker.YandexSpellChecker as Y (Config(..), createHandle)
 
 defaultPort :: Int
 defaultPort = 8081
@@ -23,4 +27,10 @@ main = do
 
 runWithPort :: Int -> IO ()
 runWithPort port =
-   runServer $ S.Handle (Y.createHandle) port
+   runServer $ S.Handle (Y.createHandle yandexSpellCheckCfg logTextStdout) port logTextStdout
+
+yandexSpellCheckCfg :: Y.Config IO
+yandexSpellCheckCfg = Y.Config
+   { cfgMaxConnectionAttempts = 2
+   , cfgLogger = logTextStdout
+   }

@@ -8,6 +8,7 @@ module Server
    ) where
 
 import Control.Monad.IO.Class (liftIO)
+import Colog (LogAction, (<&))
 import Data.Aeson
 import Data.Text (Text)
 import GHC.Generics
@@ -22,6 +23,7 @@ import qualified SpellChecker (Handle)
 data Handle = Handle
    { hSpellChecker :: SpellChecker.Handle IO
    , hServerPort   :: Int
+   , hLogger       :: LogAction IO Text
    }
 
 -- | Data model to capture incoming text to check.
@@ -67,6 +69,7 @@ server Handle{..} = checkText'
    where
       checkText' :: TextToCheck -> Handler SpellCheckResultDTO
       checkText' TextToCheck{..} = do
+         liftIO $ hLogger <& "Gotted POST API/CheckText request"
          mResult <- liftIO $ checkText hSpellChecker text
          maybe 
             (throwError err500)
