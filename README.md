@@ -10,7 +10,15 @@ Web server with api to check text misspells.
 ```
 
 Text should be sended in request body as json object with `text` field.
-
+Example:
+```json
+{"text":"Hellllo, mister cucucumber!"}
+```
+Will return:
+```json
+{"errors":["Hellllo","cucucumber"], "mark":3}
+```
+Where `errors` contains all finded misspelled words, and `mark` is resulted mark in range of 0..5. Each error decreases resulted mark by one.
 ## Run Locally
 
 Clone the project
