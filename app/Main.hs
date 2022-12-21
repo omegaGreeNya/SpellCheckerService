@@ -6,11 +6,16 @@ module Main (main) where
 
 
 import Cheops.Logger
+import Colog.Core (LogAction)
 import Colog.Json.Action (logToHandle)
+import Colog.Json.Internal.Structured (Message)
+import Data.Time.Clock (getCurrentTime)
 import System.Environment (getArgs)
+import System.Directory (createDirectoryIfMissing, getCurrentDirectory)
 import System.IO
 
 import Server (runServer)
+import Time.Extra (formatUTCTimeForFilePath)
 
 import qualified Server as S (Handle(..))
 import qualified SpellChecker.YandexSpellChecker as Y (Config, createConfig, createHandle)
@@ -20,27 +25,59 @@ defaultPort = 8081
 
 main :: IO ()
 main = do
-   args <- getArgs
-   let 
-      serverPort = case args of
-         []
-            -> defaultPort
-         (port:_)
-            -> read port
+   logFilePath <- getLogFilePath
+   withMainLogger logFilePath $ \logger -> do
+      args <- getArgs
+      let 
+         serverPort = case args of
+            []
+               -> defaultPort
+            (port:_)
+               -> read port
+         
+         spellCheckLogger = logger
+         yandexSpellConfig = yandexSpellCheckCfg logger
+         yandexSpellHandle = Y.createHandle yandexSpellConfig spellCheckLogger
+         serverLogger = logger
       
-      spellCheckLogger = stdoutLogger
-      yandexSpellHandle = Y.createHandle yandexSpellCheckCfg spellCheckLogger
-      serverLogger = stdoutLogger
-   
-   runServer $ S.Handle yandexSpellHandle serverPort serverLogger
+      runServer $ S.Handle yandexSpellHandle serverPort serverLogger
 
-yandexSpellCheckCfg :: Y.Config
-yandexSpellCheckCfg =
+yandexSpellCheckCfg :: LoggerEnv -> Y.Config
+yandexSpellCheckCfg logger =
    Y.createConfig
       connectionAttempts
-      stdoutLogger
+      logger
    where
       connectionAttempts = 2 :: Int
 
-stdoutLogger :: LoggerEnv
-stdoutLogger = mkLogger $ logToHandle stdout
+-- stdoutLogger :: LoggerEnv
+-- stdoutLogger = mkLogger stdoutLogAct
+
+withMainLogger :: FilePath -> (LoggerEnv -> IO a) -> IO a
+withMainLogger logFilePath f = 
+   withMainLogAct logFilePath (f . mkLogger)
+
+stdoutLogAct :: LogAction IO Message
+stdoutLogAct = logToHandle stdout
+
+withFileLogAct :: FilePath -> (LogAction IO Message -> IO a) -> IO a
+withFileLogAct logFilePath f =
+   withFile logFilePath AppendMode $ \logFileHandle ->
+      f $ logToHandle logFileHandle
+
+withMainLogAct :: FilePath -> (LogAction IO Message -> IO a) -> IO a
+withMainLogAct logFilePath f =
+   withFileLogAct logFilePath $ \fileLogAct ->
+      f $ stdoutLogAct <> fileLogAct
+
+getLogFilePath :: IO FilePath
+getLogFilePath = do
+   currentTime <- getCurrentTime
+   currentPath <- getCurrentDirectory
+   let
+      path = currentPath
+         <> "\\logs\\log-"
+         <> (formatUTCTimeForFilePath currentTime)
+         <> ".log"
+   createDirectoryIfMissing True $ currentPath <> "\\logs"
+   return path
