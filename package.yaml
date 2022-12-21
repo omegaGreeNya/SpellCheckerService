@@ -25,21 +25,18 @@ default-extensions:
 
 dependencies:
 - base >= 4.11 && <5
-- directory
-- prometheus-client >= 1.0
-- text >=1.2 && < 2.1
-- time
-- containers ^>=0.6
-- string-conv >=0.1 && < 0.3
+- aeson >= 2.0 && <2.2
+- bytestring >=0.10 && < 0.12
 - cheops-logger
 - co-log-core
 - co-log-json
-- stm >=2.5
-- aeson >= 2.0 && <2.2
-- bytestring >=0.10 && < 0.12
+- directory
+- filepath
 - http-client
 - http-conduit
 - servant-server
+- text >=1.2 && < 2.1
+- time
 - warp
 
 ghc-options:

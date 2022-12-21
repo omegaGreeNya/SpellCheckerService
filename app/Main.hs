@@ -12,6 +12,7 @@ import Colog.Json.Internal.Structured (Message)
 import Data.Time.Clock (getCurrentTime)
 import System.Environment (getArgs)
 import System.Directory (createDirectoryIfMissing, getCurrentDirectory)
+import System.FilePath (takeDirectory, joinPath)
 import System.IO
 
 import Server (runServer)
@@ -75,9 +76,12 @@ getLogFilePath = do
    currentTime <- getCurrentTime
    currentPath <- getCurrentDirectory
    let
-      path = currentPath
-         <> "\\logs\\log-"
-         <> (formatUTCTimeForFilePath currentTime)
-         <> ".log"
-   createDirectoryIfMissing True $ currentPath <> "\\logs"
+      path = joinPath 
+         [ currentPath
+         , "Logs-SpellCheckerService"
+         , "log-"
+            <> (formatUTCTimeForFilePath currentTime)
+            <> ".log"
+         ]
+   createDirectoryIfMissing True $ takeDirectory path
    return path

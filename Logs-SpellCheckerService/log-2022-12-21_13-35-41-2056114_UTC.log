@@ -1,0 +1,16 @@
+{"namespace":"CheckText","severity":"INFO","thread":76,"data":{"endpoint":"CheckText"},"message":"Gotted POST CheckText request"}
+{"namespace":"YandexSpellChecker","severity":"INFO","thread":76,"message":"Making Yandex API call"}
+{"namespace":"YandexSpellChecker","severity":"INFO","thread":76,"message":"Succesfully made Yandex API call"}
+{"namespace":"SpellChecker","severity":"INFO","thread":76,"message":"Succesfully preformed spell check"}
+{"namespace":"CheckText","severity":"INFO","thread":76,"data":{"endpoint":"CheckText"},"message":"Gotted POST CheckText request"}
+{"namespace":"YandexSpellChecker","severity":"INFO","thread":76,"message":"Making Yandex API call"}
+{"namespace":"YandexSpellChecker","severity":"INFO","thread":76,"message":"Succesfully made Yandex API call"}
+{"namespace":"SpellChecker","severity":"INFO","thread":76,"message":"Succesfully preformed spell check"}
+{"namespace":"CheckText","severity":"INFO","thread":76,"data":{"endpoint":"CheckText"},"message":"Gotted POST CheckText request"}
+{"namespace":"YandexSpellChecker","severity":"INFO","thread":76,"message":"Making Yandex API call"}
+{"namespace":"YandexSpellChecker","severity":"INFO","thread":76,"message":"Succesfully made Yandex API call"}
+{"namespace":"SpellChecker","severity":"INFO","thread":76,"message":"Succesfully preformed spell check"}
+{"namespace":"CheckText","severity":"INFO","thread":76,"data":{"endpoint":"CheckText"},"message":"Gotted POST CheckText request"}
+{"namespace":"YandexSpellChecker","severity":"INFO","thread":76,"message":"Making Yandex API call"}
+{"namespace":"YandexSpellChecker","severity":"INFO","thread":76,"message":"Succesfully made Yandex API call"}
+{"namespace":"SpellChecker","severity":"INFO","thread":76,"message":"Succesfully preformed spell check"}

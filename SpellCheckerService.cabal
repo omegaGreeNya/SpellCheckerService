@@ -46,14 +46,11 @@ library
     , cheops-logger
     , co-log-core
     , co-log-json
-    , containers ==0.6.*
     , directory
+    , filepath
     , http-client
     , http-conduit
-    , prometheus-client >=1.0
     , servant-server
-    , stm >=2.5
-    , string-conv >=0.1 && <0.3
     , text >=1.2 && <2.1
     , time
     , warp
@@ -77,14 +74,11 @@ executable SpellCheckerService-exe
     , cheops-logger
     , co-log-core
     , co-log-json
-    , containers ==0.6.*
     , directory
+    , filepath
     , http-client
     , http-conduit
-    , prometheus-client >=1.0
     , servant-server
-    , stm >=2.5
-    , string-conv >=0.1 && <0.3
     , text >=1.2 && <2.1
     , time
     , warp
