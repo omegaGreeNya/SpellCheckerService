@@ -1,10 +1,17 @@
 {-# LANGUAGE DeriveGeneric       #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+-- | This is implementation of SpellChecker.
+-- This module should be used in top-layer of the app
+-- as the way to acquire SpellChecker.Handle.
+-- 
+-- Config specifies some aspects of implementation behavior.
 module SpellChecker.YandexSpellChecker
     ( Config
     , createConfig
     , createHandle
     ) where
+-- To Do
+-- Split generic http functions in separate module?
 
 import Control.Exception (try)
 import Control.Monad.IO.Class (MonadIO, liftIO)
@@ -46,22 +53,30 @@ errorTooManyErrorsCode = 4
 -- << Configuration for implementation
 data Config = Config
    { cfgMaxConnectionAttempts :: Int
+   -- ^ How many attempts may be executed to acquire
+   -- response from api.
    , cfgLogger                :: LoggerEnv
+   -- ^ Logger that would be used to API calls.
    }
 
 -- | Creates config, caller shouldn't adapt LoggerEnv.
+-- max attempts count can't be less than 1.
 createConfig :: Int -> LoggerEnv -> Config
-createConfig cfgMaxConnectionAttempts logger =
-   Config{cfgLogger = logger', ..}
-   where
-      logger' = addNamespace "YandexSpellChecker" logger
+createConfig maxAttempts logger = Config
+   { cfgLogger = addNamespace "YandexSpellChecker" logger
+   , cfgMaxConnectionAttempts = max 1 maxAttempts
+   }
 
 -- >>
 
 -- << SpellChecker Handle construction
 
 -- | Caller shouldn't adapt LoggerEnv.
-createHandle :: MonadIO m => Config -> LoggerEnv -> Handle m
+createHandle
+   :: MonadIO m 
+   => Config      -- ^ API configuration
+   -> LoggerEnv   -- ^ Logger for SpellChecker.Handle
+   -> Handle m    -- ^ SpellChecker.Handle
 createHandle cfg spellCheckLogger = adaptHandle $
    Handle
       (processText cfg)
@@ -134,7 +149,7 @@ makeHttpRequestLBS' Config{..} request = do
    case eResult of
       Left err -> do
          logErr cfgLogger "Couldn't get answer from Yandex API"
-         handleHttpException cfgLogger err
+         logHttpException cfgLogger err
          return Nothing
       Right result -> do
          logInfo cfgLogger "Succesfully made Yandex API call"
@@ -170,5 +185,6 @@ constructSpellCheckRequest text =
    $ defaultRequest
 -- >>
 
-handleHttpException :: MonadIO m => LoggerEnv -> HttpException -> m ()
-handleHttpException logger = logErr logger . ls . show
+-- | Logs http exception
+logHttpException :: MonadIO m => LoggerEnv -> HttpException -> m ()
+logHttpException logger = logErr logger . ls . show

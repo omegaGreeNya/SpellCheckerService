@@ -1,12 +1,18 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TypeOperators #-}
-
+-- | Single module endpoint. Performs spell checking.
 module Endpoints.CheckText
     ( Route
     , createHandle
     , checkText
     ) where
+-- To do
+-- Unclip IO from SpellChecker.Handle IO, if it actually
+-- may deacrease boilerplate.
+--    Motivation: Spell check may be performed pure.
+--       For now, in case of pure monad, like Identety,
+--       you should unwrap monad and return result to IO context.
 
 import Control.Monad.IO.Class (liftIO)
 import Cheops.Logger
@@ -51,6 +57,7 @@ spellCheckResultToDTO SpellCheckResult{..} =
 
 data Handle = Handle
    { hSpellChecker :: SpellChecker.Handle IO
+   -- ^ Spell checker
    , hLogger :: LoggerEnv
    }
 
@@ -63,7 +70,7 @@ createHandle hSpellChecker logger =
          $ addContext (sl "endpoint" ("CheckText" :: String)) logger
       , ..}
 
--- | Checks text with given spell schecker
+-- | Manages spell checking
 checkText :: Handle -> TextToCheck -> Handler SpellCheckResultDTO
 checkText Handle{..} TextToCheck{..} = do
    logInfo hLogger "Gotted POST CheckText request"

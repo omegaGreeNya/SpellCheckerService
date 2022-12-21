@@ -4,7 +4,6 @@ module Main (main) where
 -- TO-DO
 -- Proper up-layer of the app, with config, handle creation conveer, etc..
 
-
 import Cheops.Logger
 import Colog.Core (LogAction)
 import Colog.Json.Action (logToHandle)

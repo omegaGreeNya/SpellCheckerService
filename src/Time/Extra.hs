@@ -1,3 +1,6 @@
+-- | Some missing functional for Time.
+-- To-Do
+-- Find proper place for this functions. Do not breed utils.
 module Time.Extra
    ( formatUTCTimeForFilePath
    ) where
