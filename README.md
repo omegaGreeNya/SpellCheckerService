@@ -46,3 +46,12 @@ Alternatevly, you can install with `stack install` command and run just by `Spel
 ## Usage
 
 You can specify server port by with first command line argument, if no port supplied, would be used default port `8081`.
+
+## TO-DO
+
+Usage related:
+Make logging more verbose.\
+External configuration (througth config file).\
+\
+Usage unrelated:\
+Proper app top-layer.
