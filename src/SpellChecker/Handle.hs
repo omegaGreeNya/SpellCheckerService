@@ -1,16 +1,20 @@
 module SpellChecker.Handle
     ( Handle(..)
     , TextError(..)
+    , adaptHandle
     ) where
 
-import Colog (LogAction)
-import Data.Text
+import Cheops.Logger
+import Data.Text (Text)
 
 data Handle m = Handle
    { hSpellCheck :: Text -> m (Maybe [TextError])
-   , hLogger     :: LogAction m Text
+   , hLogger     :: LoggerEnv
    }
 
 data TextError = TextError 
    { errorWord :: Text
    } deriving (Show)
+
+adaptHandle :: Handle m -> Handle m
+adaptHandle Handle{..} = Handle{hLogger = addNamespace "SpellChecker" hLogger, ..}

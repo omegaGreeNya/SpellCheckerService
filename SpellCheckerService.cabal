@@ -25,6 +25,7 @@ source-repository head
 
 library
   exposed-modules:
+      Endpoints.CheckText
       Server
       SpellChecker
       SpellChecker.Handle
@@ -38,16 +39,19 @@ library
       OverloadedStrings
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
-      aeson
-    , base >=4.7 && <5
-    , bytestring
-    , co-log
+      aeson >=2.0 && <2.2
+    , base >=4.11 && <5
+    , bytestring >=0.10 && <0.12
+    , cheops-logger
+    , co-log-json
+    , containers ==0.6.*
     , http-client
     , http-conduit
-    , lens
-    , lens-aeson
+    , prometheus-client >=1.0
     , servant-server
-    , text
+    , stm >=2.5
+    , string-conv >=0.1 && <0.3
+    , text >=1.2 && <2.1
     , warp
   default-language: Haskell2010
 
@@ -63,15 +67,18 @@ executable SpellCheckerService-exe
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       SpellCheckerService
-    , aeson
-    , base >=4.7 && <5
-    , bytestring
-    , co-log
+    , aeson >=2.0 && <2.2
+    , base >=4.11 && <5
+    , bytestring >=0.10 && <0.12
+    , cheops-logger
+    , co-log-json
+    , containers ==0.6.*
     , http-client
     , http-conduit
-    , lens
-    , lens-aeson
+    , prometheus-client >=1.0
     , servant-server
-    , text
+    , stm >=2.5
+    , string-conv >=0.1 && <0.3
+    , text >=1.2 && <2.1
     , warp
   default-language: Haskell2010

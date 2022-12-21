@@ -3,11 +3,51 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages: []
+packages:
+- completed:
+    subdir: cheops-logger
+    name: cheops-logger
+    version: 0.0.1.0
+    git: https://github.com/omegaGreeNya/cheops-logger
+    pantry-tree:
+      size: 439
+      sha256: 91598e9fe79addcde29191d17e3b577d6999d2c2655794269ddeecb589ac2cbb
+    commit: 0a0710348b42146ad5e3e36a84aef96267066f30
+  original:
+    subdir: cheops-logger
+    git: https://github.com/omegaGreeNya/cheops-logger
+    commit: 0a0710348b42146ad5e3e36a84aef96267066f30
+- completed:
+    subdir: co-log-json
+    name: co-log-json
+    version: 0.0.1.0
+    git: https://github.com/omegaGreeNya/cheops-logger
+    pantry-tree:
+      size: 523
+      sha256: 343d28bbc329c886cabc194cfb54b6f39fc8a7ac6b92a90c58c717c68699193e
+    commit: 0a0710348b42146ad5e3e36a84aef96267066f30
+  original:
+    subdir: co-log-json
+    git: https://github.com/omegaGreeNya/cheops-logger
+    commit: 0a0710348b42146ad5e3e36a84aef96267066f30
+- completed:
+    hackage: co-log-concurrent-0.5.1.0@sha256:d53ab77cabadf401fa65bbf93c96c88f30a59447a7bf24cbf748435cbf3f7021,2740
+    pantry-tree:
+      size: 366
+      sha256: 46ec842baa5016c4f75a1913cac36e9b61eea5e10dd9da75d4a206adb588e4cf
+  original:
+    hackage: co-log-concurrent-0.5.1.0@sha256:d53ab77cabadf401fa65bbf93c96c88f30a59447a7bf24cbf748435cbf3f7021,2740
+- completed:
+    hackage: co-log-core-0.2.1.1@sha256:1209cb589cf431c640f79d63b38b6cc8912a9f8397502b8c13e0959b13212bd6,3574
+    pantry-tree:
+      size: 584
+      sha256: f893bd4a8cc16ca1fdd1f6dedefd2239d261c0f926eafb444d01364d5898a0e2
+  original:
+    hackage: co-log-core-0.2.1.1@sha256:1209cb589cf431c640f79d63b38b6cc8912a9f8397502b8c13e0959b13212bd6,3574
 snapshots:
 - completed:
-    size: 567679
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/17/15.yaml
-    sha256: 72e87841a0ab5b72f6f018e8ee692fd972b7bb32a944990f028e10d6eb528e63
+    size: 648660
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/20/4.yaml
+    sha256: 3770dfd79f5aed67acdcc65c4e7730adddffe6dba79ea723cfb0918356fc0f94
   original:
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/17/15.yaml
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/20/4.yaml

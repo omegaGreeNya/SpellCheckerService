@@ -1,29 +1,27 @@
 {-# LANGUAGE DeriveGeneric       #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 module SpellChecker.YandexSpellChecker
-    ( Config(..)
+    ( Config
+    , createConfig
     , createHandle
     ) where
 
 import Control.Exception (try)
 import Control.Monad.IO.Class (MonadIO, liftIO)
-import Colog (LogAction, (<&))
+import Cheops.Logger
 import Data.Aeson
 import Data.ByteString.Lazy (ByteString)
 import Data.Text (Text)
 import GHC.Generics
-import Network.HTTP.Client (RequestBody(..))
+import Network.HTTP.Client
 import Network.HTTP.Simple
-   ( Response, Request, HttpException, httpLBS, getResponseBody, setRequestHeaders
-   , setRequestBody, setRequestMethod, setRequestPath
-   , setRequestSecure, setRequestHost, defaultRequest)
 
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 
-import SpellChecker.Handle (Handle(..), TextError(..))
+import SpellChecker.Handle (Handle(..), TextError(..), adaptHandle)
 
--- << Data Transfer Object, our wrapper for parsing responses.
+-- << DTOs
 data TextErrorDTO = TextErrorDTO
    { code :: Int
    , word :: Text
@@ -45,16 +43,32 @@ errorTooManyErrorsCode :: Int
 errorTooManyErrorsCode = 4
 -- >>
 
-data Config m = Config
+-- << Configuration for implementation
+data Config = Config
    { cfgMaxConnectionAttempts :: Int
-   , cfgLogger                :: LogAction m Text
+   , cfgLogger                :: LoggerEnv
    }
 
--- << SpellChecker Handle construction
-createHandle :: MonadIO m => Config m -> LogAction m Text -> Handle m
-createHandle cfg spellCheckLogger = Handle (processText cfg) spellCheckLogger
+-- | Creates config, caller shouldn't adapt LoggerEnv.
+createConfig :: Int -> LoggerEnv -> Config
+createConfig cfgMaxConnectionAttempts logger =
+   Config{cfgLogger = logger', ..}
+   where
+      logger' = addNamespace "YandexSpellChecker" logger
 
-processText :: MonadIO m => Config m -> Text -> m (Maybe [TextError])
+-- >>
+
+-- << SpellChecker Handle construction
+
+-- | Caller shouldn't adapt LoggerEnv.
+createHandle :: MonadIO m => Config -> LoggerEnv -> Handle m
+createHandle cfg spellCheckLogger = adaptHandle $
+   Handle
+      (processText cfg)
+      spellCheckLogger
+
+-- | Performs spelling check.
+processText :: MonadIO m => Config -> Text -> m (Maybe [TextError])
 processText _ ""   = return $ Just mempty
 processText cfg text = do
    results <- mapM (checkText cfg) $ splitTextByLimit yandexMaxTextLength text
@@ -66,7 +80,7 @@ processText cfg text = do
 
 -- | Creates a single API call, tries to send as much text as possible,
 -- returns call result and unprocessed text.
-checkText :: MonadIO m => Config m -> Text -> m (Maybe [TextError])
+checkText :: MonadIO m => Config -> Text -> m (Maybe [TextError])
 checkText cfg text = do
    -- Step one, check as much text as we can.
    mResponse <- (makeHttpRequestLBS cfg) $ constructSpellCheckRequest text
@@ -100,10 +114,10 @@ checkText cfg text = do
 
 
 -- | Tries to make http request until max attempt count isn't exhausted.
-makeHttpRequestLBS :: MonadIO m => Config m -> Request -> m (Maybe (Response ByteString))
+makeHttpRequestLBS :: MonadIO m => Config -> Request -> m (Maybe (Response ByteString))
 makeHttpRequestLBS cfg@Config{..} request = do
    let runner 0 = do
-         cfgLogger <& "Connecting attempts exhausted. Yandex API is not avaible"
+         logCrit cfgLogger "Connecting attempts exhausted. Yandex API is not avaible"
          return Nothing
        runner remainingAttemptsCount = do
          callResult <- makeHttpRequestLBS' cfg request
@@ -113,17 +127,17 @@ makeHttpRequestLBS cfg@Config{..} request = do
    runner cfgMaxConnectionAttempts
 
 -- | Tries to make http request, returns Nothing on network fail.
-makeHttpRequestLBS' :: MonadIO m => Config m -> Request -> m (Maybe (Response ByteString))
+makeHttpRequestLBS' :: MonadIO m => Config -> Request -> m (Maybe (Response ByteString))
 makeHttpRequestLBS' Config{..} request = do
-   cfgLogger <& "Making Yandex API call"
+   logInfo cfgLogger "Making Yandex API call"
    eResult <- liftIO . try $ httpLBS request
    case eResult of
       Left err -> do
-         cfgLogger <& "Couldn't get answer from Yandex API"
+         logErr cfgLogger "Couldn't get answer from Yandex API"
          handleHttpException cfgLogger err
          return Nothing
       Right result -> do
-         cfgLogger <& "Succesfully made Yandex API call"
+         logInfo cfgLogger "Succesfully made Yandex API call"
          return $ Just result
 
 -- | Splits text on parts of specified size.
@@ -156,5 +170,5 @@ constructSpellCheckRequest text =
    $ defaultRequest
 -- >>
 
-handleHttpException :: LogAction m Text -> HttpException -> m ()
-handleHttpException logger err = logger <& (T.pack . show $ err)
+handleHttpException :: MonadIO m => LoggerEnv -> HttpException -> m ()
+handleHttpException logger = logErr logger . ls . show

@@ -5,13 +5,15 @@ module Main (main) where
 -- Proper up-layer of the app, with config, handle creation conveer, etc..
 
 
-import Colog (logTextStdout)
+import Cheops.Logger
+import Colog.Json.Action (logToHandle)
 import System.Environment (getArgs)
+import System.IO
 
 import Server (runServer)
 
 import qualified Server as S (Handle(..))
-import qualified SpellChecker.YandexSpellChecker as Y (Config(..), createHandle)
+import qualified SpellChecker.YandexSpellChecker as Y (Config, createConfig, createHandle)
 
 defaultPort :: Int
 defaultPort = 8081
@@ -19,18 +21,26 @@ defaultPort = 8081
 main :: IO ()
 main = do
    args <- getArgs
-   case args of
-      []
-         -> runWithPort defaultPort
-      (port:_)
-         -> runWithPort (read port)
+   let 
+      serverPort = case args of
+         []
+            -> defaultPort
+         (port:_)
+            -> read port
+      
+      spellCheckLogger = stdoutLogger
+      yandexSpellHandle = Y.createHandle yandexSpellCheckCfg spellCheckLogger
+      serverLogger = stdoutLogger
+   
+   runServer $ S.Handle yandexSpellHandle serverPort serverLogger
 
-runWithPort :: Int -> IO ()
-runWithPort port =
-   runServer $ S.Handle (Y.createHandle yandexSpellCheckCfg logTextStdout) port logTextStdout
+yandexSpellCheckCfg :: Y.Config
+yandexSpellCheckCfg =
+   Y.createConfig
+      connectionAttempts
+      stdoutLogger
+   where
+      connectionAttempts = 2 :: Int
 
-yandexSpellCheckCfg :: Y.Config IO
-yandexSpellCheckCfg = Y.Config
-   { cfgMaxConnectionAttempts = 2
-   , cfgLogger = logTextStdout
-   }
+stdoutLogger :: LoggerEnv
+stdoutLogger = mkLogger $ logToHandle stdout
