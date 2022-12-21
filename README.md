@@ -10,6 +10,10 @@ Web server with api to check text misspells.
 ```
 
 Text should be sended in request body as json object with `text` field.
+Example:
+```json
+{"text":"Hellllo, mister cucucumber!"}
+```
 
 ## Run Locally
 
