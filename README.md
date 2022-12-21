@@ -49,7 +49,7 @@ You can specify server port by with first command line argument, if no port supp
 
 ## TO-DO
 
-Usage related:
+Usage related:\
 Make logging more verbose.\
 External configuration (througth config file).\
 \
